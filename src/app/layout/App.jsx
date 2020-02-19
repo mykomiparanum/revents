@@ -29,7 +29,7 @@ class App extends Component {
 									<Route path='/profile/:id' component={UserDetailedPage} />
 									<Route path='/settings' component={SettingsDashBoard} />
 									<Route
-										path={('/create-event', '/manage/:id')}
+										path={['/create-event', '/manage/:id']}
 										component={EventForm}
 									/>
 								</Switch>
