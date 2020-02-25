@@ -53,14 +53,12 @@
 		]
 	},
 	"devDependencies": {
+		"@types/react-redux": "^7.1.7",
 		"@types/react-redux-toastr": "^7.4.1",
 		"@types/react-router": "^5.1.4",
 		"@types/react-router-dom": "^4.3.3",
-		"eslint-config-prettier": "^6.10.0",
-		"redux-devtools-extension": "^2.13.8",
-		"source-map-explorer": "^1.5.0",
-		"typescript": "^3.3",
 		"eslint": "^5.16.0",
+		"eslint-config-prettier": "^6.10.0",
 		"eslint-config-react-app": "^5.2.0",
 		"eslint-plugin-flowtype": "^3.13.0",
 		"eslint-plugin-import": "^2.20.1",
@@ -68,6 +66,9 @@
 		"eslint-plugin-prettier": "^3.1.2",
 		"eslint-plugin-react": "^7.18.3",
 		"eslint-plugin-react-hooks": "^1.7.0",
-		"prettier": "^1.19.1"
+		"prettier": "^1.19.1",
+		"redux-devtools-extension": "^2.13.8",
+		"source-map-explorer": "^1.5.0",
+		"typescript": "^3.3"
 	}
 }
