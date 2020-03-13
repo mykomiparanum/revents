@@ -9,10 +9,8 @@ import * as serviceWorker from './serviceWorker';
 import { BrowserRouter } from 'react-router-dom';
 import { configureStore } from './app/store/ConfigureStore';
 import ScrollToTop from './app/common/util/ScrollToTop';
-import { loadEvents } from './features/event/eventActions';
 
 const store = configureStore();
-store.dispatch(loadEvents());
 
 const rootEl = document.getElementById('root');
 
@@ -40,7 +38,9 @@ if (module.hot) {
 	});
 }
 
-render();
+store.firebaseAuthIsReady.then(() => {
+	render();
+});
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.
