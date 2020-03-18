@@ -3,8 +3,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { reduxForm, Field } from 'redux-form';
 import { Segment, Form, Button, Grid, Header } from 'semantic-ui-react';
-import { createEvent, updateEvent } from '../eventActions';
-import cuid from 'cuid';
+import { createEvent, updateEvent, cancelToggle } from '../eventActions';
 import TextInput from '../../../app/common/form/TextInput';
 import TextArea from '../../../app/common/form/TextArea';
 import SelectInput from '../../../app/common/form/SelectInput';
@@ -12,32 +11,44 @@ import {
 	composeValidators,
 	combineValidators,
 	isRequired,
-	hasLengthGreaterThan,
+	hasLengthGreaterThan
 } from 'revalidate';
 import DateInput from '../../../app/common/form/DateInput';
 import PlaceInput from '../../../app/common/form/PlaceInput';
 import { geocodeByAddress, getLatLng } from 'react-places-autocomplete';
+import { withFirestore } from 'react-redux-firebase';
 
 class EventForm extends Component {
 	state = {
 		cityLatLng: {},
-		venueLatLng: {},
+		venueLatLng: {}
 	};
 
-	onFormSubmit = values => {
+	async componentDidMount() {
+		const { firestore, match } = this.props;
+		await firestore.setListener(`events/${match.params.id}`);
+	}
+
+	async componentWillUnmount() {
+		const { firestore, match } = this.props;
+		await firestore.unsetListener(`events/${match.params.id}`);
+	}
+
+	onFormSubmit = async values => {
 		values.venueLatLng = this.state.venueLatLng;
-		if (this.props.initialValues.id) {
-			this.props.updateEvent(values);
-			this.props.history.push(`/events/${this.props.initialValues.id}`);
-		} else {
-			const newEvent = {
-				...values,
-				id: cuid(),
-				hostPhotoURL: '/assets/user.png',
-				hostedBy: 'Bob',
-			};
-			this.props.createEvent(newEvent);
-			this.props.history.push(`/events/${newEvent.id}`);
+		try {
+			if (this.props.initialValues.id) {
+				if (Object.keys(values.venueLatLng).length === 0) {
+					values.venueLatLng = this.props.event.venueLatLng;
+				}
+				this.props.updateEvent(values);
+				this.props.history.push(`/events/${this.props.initialValues.id}`);
+			} else {
+				let createdEvent = await this.props.createEvent(values);
+				this.props.history.push(`/events/${createdEvent.id}`);
+			}
+		} catch (error) {
+			console.log(error);
 		}
 	};
 
@@ -46,7 +57,7 @@ class EventForm extends Component {
 			.then(results => getLatLng(results[0]))
 			.then(latlng => {
 				this.setState({
-					cityLatLng: latlng,
+					cityLatLng: latlng
 				});
 			})
 			.then(() => {
@@ -59,7 +70,7 @@ class EventForm extends Component {
 			.then(results => getLatLng(results[0]))
 			.then(latlng => {
 				this.setState({
-					venueLatLng: latlng,
+					venueLatLng: latlng
 				});
 			})
 			.then(() => {
@@ -74,6 +85,8 @@ class EventForm extends Component {
 			invalid,
 			submitting,
 			pristine,
+			event,
+			cancelToggle
 		} = this.props;
 		return (
 			<Grid>
@@ -114,7 +127,7 @@ class EventForm extends Component {
 								options={{
 									location: new google.maps.LatLng(this.state.cityLatLng),
 									radius: 1000,
-									types: ['establishment'],
+									types: ['establishment']
 								}}
 								onSelect={this.handleVenueSelect}
 								placeholder='Event Venue'
@@ -145,6 +158,13 @@ class EventForm extends Component {
 							>
 								Cancel
 							</Button>
+							<Button
+								type='button'
+								color={event.cancelled ? 'green' : 'red'}
+								floated='right'
+								content={event.cancelled ? 'Reactivate event' : 'Cancel event'}
+								onClick={() => cancelToggle(!event.cancelled, event.id)}
+							/>
 						</Form>
 					</Segment>
 				</Grid.Column>
@@ -158,18 +178,25 @@ const mapStatoToProps = (state, ownProps) => {
 
 	let event = {};
 
-	if (eventId && state.events.length > 0) {
-		event = state.events.filter(event => event.id === eventId)[0];
+	if (
+		state.firestore.ordered.events &&
+		state.firestore.ordered.events.length > 0
+	) {
+		event =
+			state.firestore.ordered.events.filter(event => event.id === eventId)[0] ||
+			{};
 	}
 
 	return {
 		initialValues: event,
+		event
 	};
 };
 
 const actions = {
 	createEvent,
 	updateEvent,
+	cancelToggle
 };
 
 const validate = combineValidators({
@@ -178,12 +205,12 @@ const validate = combineValidators({
 	description: composeValidators(
 		isRequired({ message: 'Please enter a description' }),
 		hasLengthGreaterThan(4)({
-			message: 'Description needs to be atleast 5 characters',
+			message: 'Description needs to be atleast 5 characters'
 		})
 	)(),
 	city: isRequired('city'),
 	venue: isRequired('venue'),
-	date: isRequired('date'),
+	date: isRequired('date')
 });
 
 const category = [
@@ -192,10 +219,16 @@ const category = [
 	{ key: 'film', text: 'Film', value: 'film' },
 	{ key: 'food', text: 'Food', value: 'food' },
 	{ key: 'music', text: 'Music', value: 'music' },
-	{ key: 'travel', text: 'Travel', value: 'travel' },
+	{ key: 'travel', text: 'Travel', value: 'travel' }
 ];
 
-export default connect(
-	mapStatoToProps,
-	actions
-)(reduxForm({ form: 'eventForm', validate })(EventForm));
+export default withFirestore(
+	connect(
+		mapStatoToProps,
+		actions
+	)(
+		reduxForm({ form: 'eventForm', validate, enableReinitialize: true })(
+			EventForm
+		)
+	)
+);

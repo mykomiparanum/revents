@@ -16,7 +16,10 @@ class App extends Component {
 	render() {
 		return (
 			<Fragment>
-				<Route exact path='/' component={HomePage} />
+				<Switch>
+					<Route exact path='/' component={HomePage} />
+				</Switch>
+
 				<Route
 					path='/(.+)'
 					render={() => (
