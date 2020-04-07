@@ -14,8 +14,7 @@ import { getUserEvents } from '../userActions';
 
 class UserDetailedPage extends Component {
 	async componentWillMount() {
-		let events = await this.props.getUserEvents(this.props.userUid, 3);
-		console.log(events)
+		await this.props.getUserEvents(this.props.userUid, 3);
 	}
 
 	changeTab = (e, data) => {
@@ -66,7 +65,7 @@ const mapStateToProps = (state, ownProps) => {
 	return {
 		profile,
 		userUid,
-		events: state.events,
+		events: state.events.userEvents,
 		eventsLoading: state.async.loading,
 		auth: state.firebase.auth,
 		photos: state.firestore.ordered.photos,

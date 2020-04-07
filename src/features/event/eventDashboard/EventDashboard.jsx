@@ -76,7 +76,7 @@ class EventDashboard extends Component {
 }
 
 const mapStateToProps = state => ({
-	events: state.events,
+	events: state.events.events,
 	loading: state.async.loading,
 	activities: state.firestore.ordered.activity
 });
